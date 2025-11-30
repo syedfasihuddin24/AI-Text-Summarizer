@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Text Summarizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .char-counter {
+            text-align: right;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .char-counter.warning {
+            color: #ff9800;
+        }
+
+        .char-counter.success {
+            color: #4caf50;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .summary-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .summary-section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .summary-header {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .summary-text {
+            color: #333;
+            line-height: 1.8;
+            font-size: 1.05em;
+            margin-bottom: 15px;
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 0.9em;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .error {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #ffebee;
+            border-left: 5px solid #f44336;
+            border-radius: 5px;
+            color: #c62828;
+        }
+
+        .error.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .sample-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sample-button:hover {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Text Summarizer</h1>
+        <p class="subtitle">Transform long texts into concise summaries instantly</p>
+
+        <div class="input-section">
+            <label for="inputText">Enter your text (minimum 100 characters):</label>
+            <textarea 
+                id="inputText" 
+                rows="10" 
+                placeholder="Paste your long text here... The AI will summarize it into 3-4 concise lines."
+            ></textarea>
+            <div class="char-counter" id="charCounter">0 characters</div>
+            <button class="sample-button" onclick="loadSampleText()">Load Sample Text (2000+ chars)</button>
+        </div>
+
+        <button id="summarizeBtn" onclick="summarizeText()">
+            ✨ Summarize Text
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Generating summary with AI...</div>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="summary-section" id="summarySection">
+            <div class="summary-header">📝 Summary</div>
+            <div class="summary-text" id="summaryText"></div>
+            <div class="summary-stats">
+                <span id="originalLength"></span>
+                <span id="summaryLength"></span>
+                <span id="reduction"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000';
+        const inputText = document.getElementById('inputText');
+        const charCounter = document.getElementById('charCounter');
+        const summarizeBtn = document.getElementById('summarizeBtn');
+        const loading = document.getElementById('loading');
+        const summarySection = document.getElementById('summarySection');
+        const summaryText = document.getElementById('summaryText');
+        const errorDiv = document.getElementById('error');
+
+        // Character counter
+        inputText.addEventListener('input', function() {
+            const length = this.value.length;
+            charCounter.textContent = `${length} characters`;
+            
+            if (length < 100) {
+                charCounter.className = 'char-counter warning';
+            } else {
+                charCounter.className = 'char-counter success';
+            }
+        });
+
+        // Sample text loader
+        function loadSampleText() {
+            const sampleText = `Artificial intelligence (AI) has become one of the most transformative technologies of the 21st century, revolutionizing industries from healthcare to finance, transportation to entertainment. At its core, AI refers to the simulation of human intelligence in machines that are programmed to think, learn, and problem-solve like humans. The field encompasses various subdomains including machine learning, natural language processing, computer vision, and robotics. Machine learning, a subset of AI, enables systems to learn and improve from experience without being explicitly programmed. Deep learning, a further specialization within machine learning, uses neural networks with multiple layers to analyze various factors of data. These technologies have led to breakthrough applications such as voice assistants like Siri and Alexa, recommendation systems used by Netflix and Amazon, autonomous vehicles being developed by companies like Tesla and Waymo, and medical diagnosis systems that can detect diseases from medical imaging with accuracy rivaling human experts. The impact of AI extends beyond commercial applications into scientific research, where it accelerates drug discovery, helps in climate modeling, and assists astronomers in discovering new celestial objects. However, the rapid advancement of AI also raises important ethical questions about privacy, job displacement, algorithmic bias, and the need for regulation. As AI systems become more sophisticated and autonomous, society must grapple with questions about transparency, accountability, and the appropriate boundaries of AI decision-making. Despite these challenges, the potential benefits of AI are immense, promising to solve complex problems, enhance human capabilities, and create new opportunities for innovation and growth across virtually every sector of the economy. The future of AI holds both exciting possibilities and significant responsibilities for developers, policymakers, and society at large.`;
+            
+            inputText.value = sampleText;
+            inputText.dispatchEvent(new Event('input'));
+        }
+
+        // Main summarization function
+        async function summarizeText() {
+            const text = inputText.value.trim();
+            
+            // Hide previous results
+            summarySection.classList.remove('active');
+            errorDiv.classList.remove('active');
+            
+            // Validation
+            if (!text) {
+                showError('Please enter some text to summarize.');
+                return;
+            }
+            
+            if (text.length < 100) {
+                showError('Please enter at least 100 characters for meaningful summarization.');
+                return;
+            }
+            
+            // Show loading
+            loading.classList.add('active');
+            summarizeBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_URL}/summarize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to generate summary');
+                }
+                
+                // Display summary
+                displaySummary(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message || 'Failed to connect to the API. Make sure the backend is running on port 8000.');
+            } finally {
+                loading.classList.remove('active');
+                summarizeBtn.disabled = false;
+            }
+        }
+
+        function displaySummary(data) {
+            summaryText.textContent = data.summary;
+            document.getElementById('originalLength').textContent = `Original: ${data.original_length} chars`;
+            document.getElementById('summaryLength').textContent = `Summary: ${data.summary_length} chars`;
+            
+            const reduction = ((1 - data.summary_length / data.original_length) * 100).toFixed(1);
+            document.getElementById('reduction').textContent = `Reduced by: ${reduction}%`;
+            
+            summarySection.classList.add('active');
+        }
+
+        function showError(message) {
+            errorDiv.textContent = `❌ Error: ${message}`;
+            errorDiv.classList.add('active');
+        }
+
+        // Allow Enter key to submit (with Ctrl/Cmd)
+        inputText.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                summarizeText();
+            }
+        });
+    </script>
+</body>
+</html>
