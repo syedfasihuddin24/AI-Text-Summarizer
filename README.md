@@ -106,7 +106,6 @@ Serves the frontend UI.
 ├── main.py                 # FastAPI backend
 ├── index.html              # Frontend UI
 ├── requirements.txt        # Python dependencies
-├── start_server.sh         # Quick start script (Mac)
 └── README.md               # This file
 
 ## ⚡ Performance
