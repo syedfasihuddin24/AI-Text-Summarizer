@@ -26,9 +26,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AI Text Summarizer API")
 
-# Serve static files (logo, images)
-app.mount("/static", StaticFiles(directory="."), name="static")
-
 # Enable CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
