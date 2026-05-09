@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import logging
 from sumy.parsers.plaintext import PlaintextParser
@@ -8,15 +10,15 @@ from sumy.summarizers.lsa import LsaSummarizer
 import nltk
 
 # Download required NLTK data
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt', quiet=True)
-
-try:
-    nltk.data.find('tokenizers/punkt_tab')
-except LookupError:
-    nltk.download('punkt_tab', quiet=True)
+for resource, path in [
+    ('punkt', 'tokenizers/punkt'),
+    ('punkt_tab', 'tokenizers/punkt_tab'),
+    ('stopwords', 'corpora/stopwords'),
+]:
+    try:
+        nltk.data.find(path)
+    except LookupError:
+        nltk.download(resource, quiet=True)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -35,6 +37,9 @@ app.add_middleware(
 
 # Initialize the summarization model
 try:
+    _test_parser = PlaintextParser.from_string("Test sentence for initialization.", Tokenizer("english"))
+    _test_summarizer = LsaSummarizer()
+    _test_summarizer(_test_parser.document, 1)
     logger.info("Summarizer initialized successfully!")
     summarizer_available = True
 except Exception as e:
@@ -54,7 +59,7 @@ class SummaryResponse(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "AI Text Summarizer API is running!"}
+    return FileResponse("index.html")
 
 
 @app.post("/summarize", response_model=SummaryResponse)

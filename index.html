@@ -3,361 +3,577 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Text Summarizer</title>
+    <title>Summify — AI Text Summarizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #fff5d7;
+            --surface: #ffffff;
+            --surface2: #fff0c4;
+            --border: rgba(255,94,108,0.15);
+            --border-bright: rgba(255,94,108,0.4);
+            --accent: #feb300;
+            --coral: #ff5e6c;
+            --pink: #ffaaab;
+            --text: #2a1a0e;
+            --muted: #a08060;
+            --error: #ff5e6c;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Syne', sans-serif;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            overflow-x: hidden;
         }
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 800px;
-            width: 100%;
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255,94,108,0.08) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .blob-1 {
+            width: 600px; height: 600px;
+            background: rgba(255,170,171,0.35);
+            top: -200px; right: -150px;
+            animation: drift 14s ease-in-out infinite alternate;
+        }
+        .blob-2 {
+            width: 450px; height: 450px;
+            background: rgba(254,179,0,0.2);
+            bottom: -150px; left: -100px;
+            animation: drift 18s ease-in-out infinite alternate-reverse;
+        }
+        .blob-3 {
+            width: 300px; height: 300px;
+            background: rgba(255,94,108,0.1);
+            top: 50%; left: 50%;
+            animation: drift 10s ease-in-out infinite alternate;
+        }
+
+        @keyframes drift {
+            from { transform: translate(0, 0); }
+            to { transform: translate(50px, 40px); }
+        }
+
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 48px 24px 72px;
+        }
+
+        header {
+            margin-bottom: 60px;
+            animation: fadeUp 0.6s ease both;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,94,108,0.1);
+            border: 1.5px solid rgba(255,94,108,0.25);
+            color: var(--coral);
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            padding: 6px 16px;
+            border-radius: 100px;
+            margin-bottom: 24px;
+        }
+
+        .badge::before {
+            content: '';
+            width: 7px; height: 7px;
+            background: var(--coral);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.7); }
         }
 
         h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 2.5em;
+            font-family: 'Instrument Serif', serif;
+            font-size: clamp(38px, 6vw, 62px);
+            font-weight: 400;
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            color: var(--text);
+        }
+
+        h1 em {
+            font-style: italic;
+            color: var(--coral);
         }
 
         .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.1em;
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 17px;
+            font-weight: 400;
+            max-width: 480px;
+            line-height: 1.6;
         }
 
-        .input-section {
-            margin-bottom: 20px;
+        .card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 36px;
+            animation: fadeUp 0.6s ease 0.1s both;
+            transition: border-color 0.3s;
+            box-shadow: 0 8px 40px rgba(255,94,108,0.06);
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 1.1em;
+        .card:focus-within {
+            border-color: var(--border-bright);
+            box-shadow: 0 8px 48px rgba(255,94,108,0.12);
         }
+
+        .card-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card-label span {
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .char-pill {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+            background: var(--bg);
+            transition: all 0.3s;
+        }
+
+        .char-pill.warn { border-color: rgba(255,94,108,0.4); color: var(--coral); background: rgba(255,94,108,0.06); }
+        .char-pill.ok { border-color: rgba(254,179,0,0.5); color: #8a6000; background: rgba(254,179,0,0.1); }
 
         textarea {
             width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            font-family: inherit;
-            resize: vertical;
-            transition: border-color 0.3s;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .char-counter {
-            text-align: right;
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-
-        .char-counter.warning {
-            color: #ff9800;
-        }
-
-        .char-counter.success {
-            color: #4caf50;
-        }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: transparent;
             border: none;
-            border-radius: 10px;
-            font-size: 1.2em;
+            outline: none;
+            resize: none;
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: 14px;
+            line-height: 1.9;
+            min-height: 260px;
+            caret-color: var(--coral);
+        }
+
+        textarea::placeholder { color: #d4c0a0; }
+
+        .divider {
+            height: 1.5px;
+            background: var(--border);
+            margin: 24px 0;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-sample {
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-sample:hover {
+            border-color: var(--accent);
+            color: #8a6000;
+            background: rgba(254,179,0,0.08);
+        }
+
+        .btn-clear {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
+            padding: 12px 10px;
+            transition: color 0.2s;
+        }
+        .btn-clear:hover { color: var(--coral); }
+
+        .btn-summarize {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--coral);
+            color: #fff;
+            border: none;
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            padding: 14px 32px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(255,94,108,0.3);
         }
 
-        button:hover:not(:disabled) {
+        .btn-summarize:hover:not(:disabled) {
+            background: #ff3d4e;
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 28px rgba(255,94,108,0.4);
         }
 
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
+        .btn-summarize:active:not(:disabled) { transform: translateY(0); }
+        .btn-summarize:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
+        .btn-icon { font-size: 16px; transition: transform 0.3s; }
+        .btn-summarize:hover:not(:disabled) .btn-icon { transform: rotate(20deg); }
 
-        .loading {
+        .loading-bar {
             display: none;
-            text-align: center;
-            margin: 20px 0;
+            height: 3px;
+            background: rgba(255,94,108,0.15);
+            border-radius: 3px;
+            margin-top: 24px;
+            overflow: hidden;
         }
-
-        .loading.active {
+        .loading-bar.active { display: block; }
+        .loading-bar::after {
+            content: '';
             display: block;
+            height: 100%;
+            width: 35%;
+            background: linear-gradient(90deg, transparent, var(--coral), var(--accent), transparent);
+            animation: slide 1.3s ease-in-out infinite;
         }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes slide {
+            0% { transform: translateX(-200%); }
+            100% { transform: translateX(500%); }
         }
 
         .loading-text {
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .summary-section {
             display: none;
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border-left: 5px solid #667eea;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            letter-spacing: 0.1em;
+            margin-top: 12px;
+            text-align: center;
         }
+        .loading-text.active { display: block; }
 
-        .summary-section.active {
+        .result-card {
+            margin-top: 24px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            display: none;
+            box-shadow: 0 8px 40px rgba(255,94,108,0.07);
+        }
+        .result-card.active {
             display: block;
-            animation: fadeIn 0.5s;
+            animation: fadeUp 0.5s ease both;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 32px;
+            border-bottom: 2px solid var(--border);
+            background: rgba(255,170,171,0.08);
+        }
+
+        .result-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .result-dot {
+            width: 9px; height: 9px;
+            background: var(--coral);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255,94,108,0.6);
+        }
+
+        .btn-copy {
+            background: none;
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            padding: 7px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-copy:hover { border-color: var(--coral); color: var(--coral); }
+        .btn-copy.copied { border-color: var(--accent); color: #8a6000; }
+
+        .result-body { padding: 32px; }
+
+        .result-text {
+            font-family: 'Instrument Serif', serif;
+            font-size: 22px;
+            line-height: 1.75;
+            color: var(--text);
+            letter-spacing: -0.01em;
+        }
+
+        .result-stats {
+            display: flex;
+            margin-top: 28px;
+            border-top: 2px solid var(--border);
+            padding-top: 24px;
+        }
+
+        .stat { flex: 1; text-align: center; }
+        .stat + .stat { border-left: 2px solid var(--border); }
+
+        .stat-value {
+            font-family: 'Instrument Serif', serif;
+            font-size: 32px;
+            color: var(--text);
+            display: block;
+        }
+
+        .stat-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .reduction-value { color: var(--coral); }
+
+        .error-card {
+            display: none;
+            margin-top: 16px;
+            padding: 18px 24px;
+            background: rgba(255,94,108,0.06);
+            border: 1.5px solid rgba(255,94,108,0.25);
+            border-radius: 14px;
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            color: var(--coral);
+            letter-spacing: 0.02em;
+        }
+        .error-card.active { display: block; animation: fadeUp 0.3s ease both; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .summary-header {
-            color: #667eea;
-            font-weight: 600;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-        }
-
-        .summary-text {
-            color: #333;
-            line-height: 1.8;
-            font-size: 1.05em;
-            margin-bottom: 15px;
-        }
-
-        .summary-stats {
-            display: flex;
-            justify-content: space-between;
-            color: #666;
-            font-size: 0.9em;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
-        }
-
-        .error {
-            display: none;
-            margin-top: 15px;
-            padding: 15px;
-            background: #ffebee;
-            border-left: 5px solid #f44336;
-            border-radius: 5px;
-            color: #c62828;
-        }
-
-        .error.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-
-        .sample-button {
-            margin-top: 10px;
-            padding: 8px 15px;
-            background: #f0f0f0;
-            color: #333;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .sample-button:hover {
-            background: #e0e0e0;
+        footer {
+            margin-top: 56px;
+            text-align: center;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--pink);
+            letter-spacing: 0.1em;
+            animation: fadeUp 0.6s ease 0.3s both;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🤖 AI Text Summarizer</h1>
-        <p class="subtitle">Transform long texts into concise summaries instantly</p>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
 
-        <div class="input-section">
-            <label for="inputText">Enter your text (minimum 100 characters):</label>
-            <textarea 
-                id="inputText" 
-                rows="10" 
-                placeholder="Paste your long text here... The AI will summarize it into 3-4 concise lines."
-            ></textarea>
-            <div class="char-counter" id="charCounter">0 characters</div>
-            <button class="sample-button" onclick="loadSampleText()">Load Sample Text (2000+ chars)</button>
-        </div>
+    <div class="wrapper">
+        <header>
+            <div class="badge">✦ AI POWERED · LSA MODEL</div>
+            <h1>Turn walls of text<br>into <em>clear insight</em></h1>
+            <p class="subtitle">Paste any long-form text and get a concise, intelligent summary in seconds.</p>
+        </header>
 
-        <button id="summarizeBtn" onclick="summarizeText()">
-            ✨ Summarize Text
-        </button>
-
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <div class="loading-text">Generating summary with AI...</div>
-        </div>
-
-        <div class="error" id="error"></div>
-
-        <div class="summary-section" id="summarySection">
-            <div class="summary-header">📝 Summary</div>
-            <div class="summary-text" id="summaryText"></div>
-            <div class="summary-stats">
-                <span id="originalLength"></span>
-                <span id="summaryLength"></span>
-                <span id="reduction"></span>
+        <div class="card">
+            <div class="card-label">
+                <span>Input Text</span>
+                <span class="char-pill" id="charPill">0 chars</span>
+            </div>
+            <textarea id="inputText" rows="12" placeholder="Paste your article, essay, or document here..."></textarea>
+            <div class="divider"></div>
+            <div class="actions">
+                <button class="btn-sample" onclick="loadSample()">Load sample</button>
+                <button class="btn-clear" onclick="clearText()">Clear</button>
+                <button class="btn-summarize" id="summarizeBtn" onclick="summarize()">
+                    <span class="btn-icon">✦</span> Summarize
+                </button>
             </div>
         </div>
+
+        <div class="loading-bar" id="loadingBar"></div>
+        <div class="loading-text" id="loadingText">GENERATING SUMMARY...</div>
+        <div class="error-card" id="errorCard"></div>
+
+        <div class="result-card" id="resultCard">
+            <div class="result-header">
+                <div class="result-title">
+                    <div class="result-dot"></div>
+                    Summary
+                </div>
+                <button class="btn-copy" id="copyBtn" onclick="copySummary()">COPY</button>
+            </div>
+            <div class="result-body">
+                <div class="result-text" id="resultText"></div>
+                <div class="result-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="statOriginal">—</span>
+                        <span class="stat-label">Original</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="statSummary">—</span>
+                        <span class="stat-label">Summary</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value reduction-value" id="statReduction">—</span>
+                        <span class="stat-label">Reduced</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>SUMMIFY · CRAFTED BY SYED FASIHUDDIN</footer>
     </div>
 
     <script>
-        const API_URL = 'http://127.0.0.1:8000';
-        const inputText = document.getElementById('inputText');
-        const charCounter = document.getElementById('charCounter');
-        const summarizeBtn = document.getElementById('summarizeBtn');
-        const loading = document.getElementById('loading');
-        const summarySection = document.getElementById('summarySection');
-        const summaryText = document.getElementById('summaryText');
-        const errorDiv = document.getElementById('error');
+        const API_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+            ? 'http://127.0.0.1:8000'
+            : `${window.location.protocol}//${window.location.hostname}:8000`;
 
-        // Character counter
-        inputText.addEventListener('input', function() {
-            const length = this.value.length;
-            charCounter.textContent = `${length} characters`;
-            
-            if (length < 100) {
-                charCounter.className = 'char-counter warning';
-            } else {
-                charCounter.className = 'char-counter success';
-            }
+        const inputText = document.getElementById('inputText');
+        const charPill = document.getElementById('charPill');
+        const summarizeBtn = document.getElementById('summarizeBtn');
+        const loadingBar = document.getElementById('loadingBar');
+        const loadingText = document.getElementById('loadingText');
+        const errorCard = document.getElementById('errorCard');
+        const resultCard = document.getElementById('resultCard');
+        const resultText = document.getElementById('resultText');
+        const copyBtn = document.getElementById('copyBtn');
+
+        inputText.addEventListener('input', () => {
+            const len = inputText.value.length;
+            charPill.textContent = `${len} chars`;
+            charPill.className = 'char-pill' + (len === 0 ? '' : len < 100 ? ' warn' : ' ok');
         });
 
-        // Sample text loader
-        function loadSampleText() {
-            const sampleText = `Artificial intelligence (AI) has become one of the most transformative technologies of the 21st century, revolutionizing industries from healthcare to finance, transportation to entertainment. At its core, AI refers to the simulation of human intelligence in machines that are programmed to think, learn, and problem-solve like humans. The field encompasses various subdomains including machine learning, natural language processing, computer vision, and robotics. Machine learning, a subset of AI, enables systems to learn and improve from experience without being explicitly programmed. Deep learning, a further specialization within machine learning, uses neural networks with multiple layers to analyze various factors of data. These technologies have led to breakthrough applications such as voice assistants like Siri and Alexa, recommendation systems used by Netflix and Amazon, autonomous vehicles being developed by companies like Tesla and Waymo, and medical diagnosis systems that can detect diseases from medical imaging with accuracy rivaling human experts. The impact of AI extends beyond commercial applications into scientific research, where it accelerates drug discovery, helps in climate modeling, and assists astronomers in discovering new celestial objects. However, the rapid advancement of AI also raises important ethical questions about privacy, job displacement, algorithmic bias, and the need for regulation. As AI systems become more sophisticated and autonomous, society must grapple with questions about transparency, accountability, and the appropriate boundaries of AI decision-making. Despite these challenges, the potential benefits of AI are immense, promising to solve complex problems, enhance human capabilities, and create new opportunities for innovation and growth across virtually every sector of the economy. The future of AI holds both exciting possibilities and significant responsibilities for developers, policymakers, and society at large.`;
-            
-            inputText.value = sampleText;
+        function clearText() {
+            inputText.value = '';
+            inputText.dispatchEvent(new Event('input'));
+            resultCard.classList.remove('active');
+            errorCard.classList.remove('active');
+        }
+
+        function loadSample() {
+            inputText.value = `Artificial intelligence (AI) has become one of the most transformative technologies of the 21st century, revolutionizing industries from healthcare to finance, transportation to entertainment. At its core, AI refers to the simulation of human intelligence in machines that are programmed to think, learn, and problem-solve like humans. The field encompasses various subdomains including machine learning, natural language processing, computer vision, and robotics. Machine learning, a subset of AI, enables systems to learn and improve from experience without being explicitly programmed. Deep learning, a further specialization within machine learning, uses neural networks with multiple layers to analyze various factors of data. These technologies have led to breakthrough applications such as voice assistants like Siri and Alexa, recommendation systems used by Netflix and Amazon, autonomous vehicles being developed by companies like Tesla and Waymo, and medical diagnosis systems that can detect diseases from medical imaging with accuracy rivaling human experts. The impact of AI extends beyond commercial applications into scientific research, where it accelerates drug discovery, helps in climate modeling, and assists astronomers in discovering new celestial objects. However, the rapid advancement of AI also raises important ethical questions about privacy, job displacement, algorithmic bias, and the need for regulation. As AI systems become more sophisticated and autonomous, society must grapple with questions about transparency, accountability, and the appropriate boundaries of AI decision-making. Despite these challenges, the potential benefits of AI are immense, promising to solve complex problems, enhance human capabilities, and create new opportunities for innovation and growth across virtually every sector of the economy.`;
             inputText.dispatchEvent(new Event('input'));
         }
 
-        // Main summarization function
-        async function summarizeText() {
+        async function summarize() {
             const text = inputText.value.trim();
-            
-            // Hide previous results
-            summarySection.classList.remove('active');
-            errorDiv.classList.remove('active');
-            
-            // Validation
-            if (!text) {
-                showError('Please enter some text to summarize.');
-                return;
-            }
-            
-            if (text.length < 100) {
-                showError('Please enter at least 100 characters for meaningful summarization.');
-                return;
-            }
-            
-            // Show loading
-            loading.classList.add('active');
+            errorCard.classList.remove('active');
+            resultCard.classList.remove('active');
+
+            if (!text) return showError('Please enter some text.');
+            if (text.length < 100) return showError('Need at least 100 characters.');
+
+            loadingBar.classList.add('active');
+            loadingText.classList.add('active');
             summarizeBtn.disabled = true;
-            
+
             try {
-                const response = await fetch(`${API_URL}/summarize`, {
+                const res = await fetch(`${API_URL}/summarize`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ text: text })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
                 });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.detail || 'Failed to generate summary');
-                }
-                
-                // Display summary
-                displaySummary(data);
-                
-            } catch (error) {
-                console.error('Error:', error);
-                showError(error.message || 'Failed to connect to the API. Make sure the backend is running on port 8000.');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to summarize.');
+
+                resultText.textContent = data.summary;
+                document.getElementById('statOriginal').textContent = `${data.original_length.toLocaleString()} ch`;
+                document.getElementById('statSummary').textContent = `${data.summary_length.toLocaleString()} ch`;
+                document.getElementById('statReduction').textContent = `${((1 - data.summary_length / data.original_length) * 100).toFixed(0)}%`;
+                resultCard.classList.add('active');
+
+            } catch (e) {
+                showError(e.message || 'Could not connect to backend. Is the server running?');
             } finally {
-                loading.classList.remove('active');
+                loadingBar.classList.remove('active');
+                loadingText.classList.remove('active');
                 summarizeBtn.disabled = false;
             }
         }
 
-        function displaySummary(data) {
-            summaryText.textContent = data.summary;
-            document.getElementById('originalLength').textContent = `Original: ${data.original_length} chars`;
-            document.getElementById('summaryLength').textContent = `Summary: ${data.summary_length} chars`;
-            
-            const reduction = ((1 - data.summary_length / data.original_length) * 100).toFixed(1);
-            document.getElementById('reduction').textContent = `Reduced by: ${reduction}%`;
-            
-            summarySection.classList.add('active');
+        function showError(msg) {
+            errorCard.textContent = '⚠ ' + msg;
+            errorCard.classList.add('active');
         }
 
-        function showError(message) {
-            errorDiv.textContent = `❌ Error: ${message}`;
-            errorDiv.classList.add('active');
+        async function copySummary() {
+            await navigator.clipboard.writeText(resultText.textContent);
+            copyBtn.textContent = 'COPIED ✓';
+            copyBtn.classList.add('copied');
+            setTimeout(() => { copyBtn.textContent = 'COPY'; copyBtn.classList.remove('copied'); }, 2000);
         }
 
-        // Allow Enter key to submit (with Ctrl/Cmd)
-        inputText.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                summarizeText();
-            }
+        inputText.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') summarize();
         });
     </script>
 </body>
