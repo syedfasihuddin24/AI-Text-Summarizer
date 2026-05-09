@@ -104,8 +104,11 @@ Serves the frontend UI.
 ## 📁 Project Structure
 .
 ├── main.py                 # FastAPI backend
+
 ├── index.html              # Frontend UI
+
 ├── requirements.txt        # Python dependencies
+
 └── README.md               # This file
 
 ## ⚡ Performance
