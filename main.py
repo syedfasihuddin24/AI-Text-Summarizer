@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AI Text Summarizer API")
 
+# Serve static files (logo, images)
+app.mount("/static", StaticFiles(directory="."), name="static")
+
 # Enable CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
@@ -70,50 +73,50 @@ async def summarize_text(input_data: TextInput):
     """
     try:
         text = input_data.text.strip()
-        
+
         # Validation
         if not text:
             raise HTTPException(status_code=400, detail="Text cannot be empty")
-        
+
         if len(text) < 100:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail="Text is too short. Please provide at least 100 characters for meaningful summarization."
             )
-        
+
         if not summarizer_available:
             raise HTTPException(
-                status_code=503, 
+                status_code=503,
                 detail="Summarization service is not available. Please try again later."
             )
-        
+
         logger.info(f"Summarizing text of length: {len(text)} characters")
-        
+
         # Create parser and summarizer
         parser = PlaintextParser.from_string(text, Tokenizer("english"))
         summarizer = LsaSummarizer()
-        
+
         # Calculate number of sentences (3-4 lines approximately 3-5 sentences)
         sentence_count = min(5, max(3, len(text) // 200))  # Adaptive based on text length
-        
+
         # Generate summary
         summary_sentences = summarizer(parser.document, sentence_count)
         summary = ' '.join([str(sentence) for sentence in summary_sentences])
-        
+
         logger.info(f"Summary generated successfully. Length: {len(summary)} characters")
-        
+
         return SummaryResponse(
             summary=summary,
             original_length=len(text),
             summary_length=len(summary)
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error during summarization: {str(e)}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"An error occurred during summarization: {str(e)}"
         )
 
